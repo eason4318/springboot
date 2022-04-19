@@ -1,11 +1,11 @@
 <template>
   <div>
     <div style="margin: 10px 0">
-      <el-input style="width: 200px" placeholder="请输入名称" suffix-icon="el-icon-search" v-model="username"></el-input>
-      <el-input style="width: 200px" placeholder="请输入邮箱" suffix-icon="el-icon-message" class="ml-5"
-                v-model="email"></el-input>
-      <el-input style="width: 200px" placeholder="请输入地址" suffix-icon="el-icon-position" class="ml-5"
-                v-model="address"></el-input>
+      <el-input style="width: 200px" placeholder="请输入名称" suffix-icon="el-icon-search" v-model="name"></el-input>
+      <!--      <el-input style="width: 200px" placeholder="请输入邮箱" suffix-icon="el-icon-message" class="ml-5"
+                      v-model="email"></el-input>
+            <el-input style="width: 200px" placeholder="请输入地址" suffix-icon="el-icon-position" class="ml-5"
+                      v-model="address"></el-input>-->
       <el-button class="ml-5" type="primary" @click="load">搜索</el-button>
       <el-button type="warning" @click="reset">重置</el-button>
     </div>
@@ -29,15 +29,20 @@
     <el-table :data="tableData" border stripe :header-cell-class-name="'headerBg'"
               @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55"></el-table-column>
-      <el-table-column prop="id" label="ID" width="80"></el-table-column>
-      <el-table-column prop="username" label="用户名" width="140"></el-table-column>
-      <el-table-column prop="role" label="角色"></el-table-column>
-      <el-table-column prop="nickname" label="昵称" width="120"></el-table-column>
-      <el-table-column prop="email" label="邮箱"></el-table-column>
-      <el-table-column prop="phone" label="电话"></el-table-column>
-      <el-table-column prop="address" label="地址"></el-table-column>
-      <el-table-column label="操作" width="200" align="center">
+      <el-table-column prop="id" label="ID" width="120"></el-table-column>
+      <el-table-column prop="name" label="名称" width="150"></el-table-column>
+      <el-table-column prop="path" label="路径" width="150"></el-table-column>
+      <el-table-column prop="pagePath" label="页面路径" width="150"></el-table-column>
+
+      <el-table-column label="图标" class-name="fontSize18" align="center" label-class-name="fontSize12" width="150">
         <template slot-scope="scope">
+          <span :class="scope.row.icon"/>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="操作"  align="center">
+        <template slot-scope="scope">
+          <el-button type="success" @click="selectMenu(scope.row.id)">分配菜单 <i class="el-icon-menu"></i></el-button>
           <el-button type="success" @click="handleEdit(scope.row)">编辑 <i class="el-icon-edit"></i></el-button>
           <el-popconfirm
               class="ml-5"
@@ -53,39 +58,28 @@
         </template>
       </el-table-column>
     </el-table>
-    <div style="padding: 10px 0">
-      <el-pagination
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-          :current-page="pageNum"
-          :page-sizes="[2, 5, 10, 20]"
-          :page-size="pageSize"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="total">
-      </el-pagination>
-    </div>
 
-    <el-dialog title="用户信息" :visible.sync="dialogFormVisible" width="30%">
+
+    <el-dialog title="菜单信息" :visible.sync="dialogFormVisible" width="30%">
       <el-form label-width="80px" size="small">
-        <el-form-item label="用户名">
-          <el-input v-model="form.username" autocomplete="off"></el-input>
+        <el-form-item label="名称">
+          <el-input v-model="form.name" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="角色">
-          <el-select clearable v-model="form.role" placeholder="请选择角色" style="width: 100%">
-            <el-option v-for="item in roles" :key="item.name" :label="item.name" :value="item.flag"></el-option>
+        <el-form-item label="路径">
+          <el-input v-model="form.path" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="页面路径">
+          <el-input v-model="form.pagePath" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="图标">
+          <el-select clearable v-model="form.icon" placeholder="请选择" style="width: 100%">
+            <el-option v-for="item in options" :key="item.name" :label="item.name" :value="item.value">
+              <i :class="item.value"/> {{ item.name }}
+            </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="昵称">
-          <el-input v-model="form.nickname" autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="邮箱">
-          <el-input v-model="form.email" autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="电话">
-          <el-input v-model="form.phone" autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="地址">
-          <el-input v-model="form.address" autocomplete="off"></el-input>
+        <el-form-item label="描述">
+          <el-input v-model="form.description" autocomplete="off"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -106,14 +100,13 @@ export default {
       tableData: [],
       total: 0,
       pageNum: 1,
-      pageSize: 2,
-      username: "",
-      email: "",
-      address: "",
+      pageSize: 10,
+      name: "",
       form: {},
       dialogFormVisible: false,
       multipleSelection: [],
-      roles: []
+      menuDialogVis: false,
+      options: []
     }
   },
   created() {
@@ -121,18 +114,13 @@ export default {
   },
   methods: {
     load() {
-      this.request.get("/user/page", {
+      this.request.get("/menu", {
         params: {
-          pageNum: this.pageNum,
-          pageSize: this.pageSize,
-          username: this.username,
-          email: this.email,
-          address: this.address,
+          name: this.name,
         }
       }).then(res => {
         console.log(res)
-        this.tableData = res.data.records
-        this.total = res.data.total
+        this.tableData = res.data
       })
       this.request.get("/role").then(res => {
         this.roles = res.data
@@ -149,17 +137,25 @@ export default {
         }
       })
     },
-    handleAdd() {
+    handleAdd(pid) {
       this.dialogFormVisible = true
       this.form = {}
+      if (pid) {
+        this.form.pid = pid
+      }
     },
     handleEdit(row) {
-      this.form = row
+      this.form = JSON.parse(JSON.stringify(row))
       this.dialogFormVisible = true
+
+      // 请求图标的数据
+      this.request.get("/menu/icons").then(res => {
+        this.options = res.data
+      })
     },
     del(id) {
       this.request.delete("/user/" + id).then(res => {
-        if (res.code === '200') {
+        if (res.data) {
           this.$message.success("删除成功")
           this.load()
         } else {
@@ -167,6 +163,49 @@ export default {
         }
       })
     },
+    saveRoleMenu() {
+      this.request.post("/role/roleMenu/" + this.roleId, this.$refs.tree.getCheckedKeys()).then(res => {
+        if (res.code === '200') {
+          this.$message.success("绑定成功")
+          this.menuDialogVis = false
+
+          // 操作管理员角色后需要重新登录
+          if (this.roleFlag === 'ROLE_ADMIN') {
+            this.$store.commit("logout")
+          }
+
+        } else {
+          this.$message.error(res.msg)
+        }
+      })
+    },
+    selectMenu(role) {
+      this.roleId = role.id
+      this.roleFlag = role.flag
+
+      // 请求菜单数据
+      this.request.get("/menu").then(res => {
+        this.menuData = res.data
+
+        // 把后台返回的菜单数据处理成 id数组
+        this.expends = this.menuData.map(v => v.id)
+      })
+
+      this.request.get("/role/roleMenu/" + this.roleId).then(res => {
+        this.checks = res.data
+
+        this.request.get("/menu/ids").then(r => {
+          const ids = r.data
+          ids.forEach(id => {
+            if (!this.checks.includes(id)) {
+              this.$refs.tree.setChecked(id, false)
+            }
+          })
+        })
+        this.menuDialogVis = true
+      })
+    },
+
     handleSelectionChange(val) {
       console.log(val)
       this.multipleSelection = val
@@ -174,7 +213,7 @@ export default {
     delBatch() {
       let ids = this.multipleSelection.map(v => v.id)  // [{}, {}, {}] => [1,2,3]
       this.request.post("/user/del/batch", ids).then(res => {
-        if (res.code === '200') {
+        if (res.data) {
           this.$message.success("批量删除成功")
           this.load()
         } else {
@@ -183,9 +222,7 @@ export default {
       })
     },
     reset() {
-      this.username = ""
-      this.email = ""
-      this.address = ""
+      this.name = ""
       this.load()
     },
     handleSizeChange(pageSize) {
@@ -206,5 +243,11 @@ export default {
 <style>
 .headerBg {
   background: #eee !important;
+}
+.fontSize18{
+  fontSize: 18px;
+}
+.fontSize12{
+  fontSize: 12px;
 }
 </style>

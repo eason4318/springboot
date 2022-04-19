@@ -7,7 +7,7 @@
 
     <el-container>
       <el-header style="border-bottom: 1px solid #ccc;">
-        <Header :collapseBtnClass="collapseBtnClass" @asideCollapse="collapse" />
+        <Header :collapseBtnClass="collapseBtnClass" @asideCollapse="collapse" :user="user"/>
       </el-header>
 
       <el-main>
@@ -32,6 +32,7 @@ export default {
       isCollapse: false,
       sideWidth: 200,
       logoTextShow: true,
+      user: {}
     }
   },
   components: {
@@ -49,6 +50,14 @@ export default {
         this.sideWidth = 200
         this.collapseBtnClass = 'el-icon-s-fold'
         this.logoTextShow = true
+      }
+    },
+    getUser() {
+      let username = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).username : ""
+      if (username) {
+        this.request.get("/user/username/" + username).then(res => {
+          this.user = res.data
+        })
       }
     }
   }

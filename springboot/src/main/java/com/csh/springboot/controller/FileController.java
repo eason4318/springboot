@@ -161,7 +161,7 @@ public class FileController {
         QueryWrapper<Files> queryWrapper = new QueryWrapper<>();
         // 查询未删除的记录
         queryWrapper.eq("is_delete", false);
-        queryWrapper.orderByDesc("id");
+//        queryWrapper.orderByDesc("id");
         if (!"".equals(name)) {
             queryWrapper.like("name", name);
         }

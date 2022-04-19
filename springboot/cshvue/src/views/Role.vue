@@ -1,11 +1,11 @@
 <template>
   <div>
     <div style="margin: 10px 0">
-      <el-input style="width: 200px" placeholder="请输入名称" suffix-icon="el-icon-search" v-model="username"></el-input>
-      <el-input style="width: 200px" placeholder="请输入邮箱" suffix-icon="el-icon-message" class="ml-5"
+      <el-input style="width: 200px" placeholder="请输入名称" suffix-icon="el-icon-search" v-model="name"></el-input>
+<!--      <el-input style="width: 200px" placeholder="请输入邮箱" suffix-icon="el-icon-message" class="ml-5"
                 v-model="email"></el-input>
       <el-input style="width: 200px" placeholder="请输入地址" suffix-icon="el-icon-position" class="ml-5"
-                v-model="address"></el-input>
+                v-model="address"></el-input>-->
       <el-button class="ml-5" type="primary" @click="load">搜索</el-button>
       <el-button type="warning" @click="reset">重置</el-button>
     </div>
@@ -30,14 +30,12 @@
               @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55"></el-table-column>
       <el-table-column prop="id" label="ID" width="80"></el-table-column>
-      <el-table-column prop="username" label="用户名" width="140"></el-table-column>
-      <el-table-column prop="role" label="角色"></el-table-column>
-      <el-table-column prop="nickname" label="昵称" width="120"></el-table-column>
-      <el-table-column prop="email" label="邮箱"></el-table-column>
-      <el-table-column prop="phone" label="电话"></el-table-column>
-      <el-table-column prop="address" label="地址"></el-table-column>
-      <el-table-column label="操作" width="200" align="center">
+      <el-table-column prop="name" label="名称" width="140"></el-table-column>
+      <el-table-column prop="flag" label="唯一标识" width="140"></el-table-column>
+      <el-table-column prop="description" label="描述" width="120"></el-table-column>
+      <el-table-column label="操作"  align="center">
         <template slot-scope="scope">
+          <el-button type="success" @click="selectMenu(scope.row.id)">分配菜单 <i class="el-icon-menu"></i></el-button>
           <el-button type="success" @click="handleEdit(scope.row)">编辑 <i class="el-icon-edit"></i></el-button>
           <el-popconfirm
               class="ml-5"
@@ -65,34 +63,46 @@
       </el-pagination>
     </div>
 
-    <el-dialog title="用户信息" :visible.sync="dialogFormVisible" width="30%">
+    <el-dialog title="角色信息" :visible.sync="dialogFormVisible" width="30%">
       <el-form label-width="80px" size="small">
-        <el-form-item label="用户名">
-          <el-input v-model="form.username" autocomplete="off"></el-input>
+        <el-form-item label="名称">
+          <el-input v-model="form.name" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="角色">
-          <el-select clearable v-model="form.role" placeholder="请选择角色" style="width: 100%">
-            <el-option v-for="item in roles" :key="item.name" :label="item.name" :value="item.flag"></el-option>
-          </el-select>
+        <el-form-item label="唯一标识">
+          <el-input v-model="form.flag" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="昵称">
-          <el-input v-model="form.nickname" autocomplete="off"></el-input>
+        <el-form-item label="描述">
+          <el-input v-model="form.description" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="邮箱">
-          <el-input v-model="form.email" autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="电话">
-          <el-input v-model="form.phone" autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="地址">
-          <el-input v-model="form.address" autocomplete="off"></el-input>
-        </el-form-item>
+
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取 消</el-button>
         <el-button type="primary" @click="save">确 定</el-button>
       </div>
     </el-dialog>
+
+    <el-dialog title="菜单分配" :visible.sync="menuDialogVis" width="30%">
+      <el-tree
+          :props="props"
+          :data="menuData"
+          show-checkbox
+          node-key="id"
+          ref="tree"
+          :default-expanded-keys="expends"
+          :default-checked-keys="checks">
+         <span class="custom-tree-node" slot-scope="{ node, data }">
+            <span><i :class="data.icon"></i> {{ data.name }}</span>
+         </span>
+      </el-tree>
+
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="menuDialogVis = false">取 消</el-button>
+        <el-button type="primary" @click="saveRoleMenu">确 定</el-button>
+      </div>
+
+    </el-dialog>
+
   </div>
 </template>
 
@@ -107,13 +117,20 @@ export default {
       total: 0,
       pageNum: 1,
       pageSize: 2,
-      username: "",
-      email: "",
-      address: "",
+      name: "",
       form: {},
       dialogFormVisible: false,
       multipleSelection: [],
-      roles: []
+      roles: [],
+      menuData: [],
+      props: {
+        label: 'name',
+      },
+      menuDialogVis: false,
+      expends: [],
+      checks: [],
+      roleId: 0,
+      roleFlag: ''
     }
   },
   created() {
@@ -121,16 +138,15 @@ export default {
   },
   methods: {
     load() {
-      this.request.get("/user/page", {
+      this.request.get("/role/page", {
         params: {
           pageNum: this.pageNum,
           pageSize: this.pageSize,
-          username: this.username,
-          email: this.email,
-          address: this.address,
+          name: this.name,
         }
       }).then(res => {
         console.log(res)
+
         this.tableData = res.data.records
         this.total = res.data.total
       })
@@ -139,7 +155,7 @@ export default {
       })
     },
     save() {
-      this.request.post("/user", this.form).then(res => {
+      this.request.post("/role", this.form).then(res => {
         if (res.code === '200') {
           this.$message.success("保存成功")
           this.dialogFormVisible = false
@@ -147,6 +163,48 @@ export default {
         } else {
           this.$message.error("保存失败")
         }
+      })
+    },
+    saveRoleMenu() {
+      this.request.post("/role/roleMenu/" + this.roleId, this.$refs.tree.getCheckedKeys()).then(res => {
+        if (res.code === '200') {
+          this.$message.success("绑定成功")
+          this.menuDialogVis = false
+
+          // 操作管理员角色后需要重新登录
+          if (this.roleFlag === 'ROLE_ADMIN') {
+            this.$store.commit("logout")
+          }
+
+        } else {
+          this.$message.error(res.msg)
+        }
+      })
+    },
+    selectMenu(role) {
+      this.roleId = role.id
+      this.roleFlag = role.flag
+
+      // 请求菜单数据
+      this.request.get("/menu").then(res => {
+        this.menuData = res.data
+
+        // 把后台返回的菜单数据处理成 id数组
+        this.expends = this.menuData.map(v => v.id)
+      })
+
+      this.request.get("/role/roleMenu/" + this.roleId).then(res => {
+        this.checks = res.data
+
+        this.request.get("/menu/ids").then(r => {
+          const ids = r.data
+          ids.forEach(id => {
+            if (!this.checks.includes(id)) {
+              this.$refs.tree.setChecked(id, false)
+            }
+          })
+        })
+        this.menuDialogVis = true
       })
     },
     handleAdd() {
@@ -159,7 +217,7 @@ export default {
     },
     del(id) {
       this.request.delete("/user/" + id).then(res => {
-        if (res.code === '200') {
+        if (res.data) {
           this.$message.success("删除成功")
           this.load()
         } else {
@@ -174,7 +232,7 @@ export default {
     delBatch() {
       let ids = this.multipleSelection.map(v => v.id)  // [{}, {}, {}] => [1,2,3]
       this.request.post("/user/del/batch", ids).then(res => {
-        if (res.code === '200') {
+        if (res.data) {
           this.$message.success("批量删除成功")
           this.load()
         } else {
@@ -183,9 +241,9 @@ export default {
       })
     },
     reset() {
-      this.username = ""
-      this.email = ""
-      this.address = ""
+      this.name = ""
+      this.flag = ""
+      this.description = ""
       this.load()
     },
     handleSizeChange(pageSize) {
