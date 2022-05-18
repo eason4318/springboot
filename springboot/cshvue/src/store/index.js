@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import router from "@/router";
+import router, {resetRout} from "@/router";
 
 Vue.use(Vuex)
 
@@ -16,6 +16,7 @@ const store = new Vuex.Store({
             localStorage.removeItem("user")
             localStorage.removeItem("menus")
             router.push("/login")
+            resetRout()
         }
     }
 })

@@ -51,7 +51,7 @@ public class UserController {
                 if (StrUtil.isBlank(username) || StrUtil.isBlank(password)) {
                     return Result.error(Constants.CODE_400,"参数错误");
                 }
-                return Result.success(userDTO);
+                return Result.success(userService.register(userDTO));
             }
 
 

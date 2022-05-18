@@ -35,7 +35,7 @@
       <el-table-column prop="description" label="描述" width="120"></el-table-column>
       <el-table-column label="操作"  align="center">
         <template slot-scope="scope">
-          <el-button type="success" @click="selectMenu(scope.row.id)">分配菜单 <i class="el-icon-menu"></i></el-button>
+          <el-button type="success" @click="selectMenu(scope.row)">分配菜单 <i class="el-icon-menu"></i></el-button>
           <el-button type="success" @click="handleEdit(scope.row)">编辑 <i class="el-icon-edit"></i></el-button>
           <el-popconfirm
               class="ml-5"
@@ -216,8 +216,8 @@ export default {
       this.dialogFormVisible = true
     },
     del(id) {
-      this.request.delete("/user/" + id).then(res => {
-        if (res.data) {
+      this.request.delete("/role/" + id).then(res => {
+        if (res.code === '200') {
           this.$message.success("删除成功")
           this.load()
         } else {
@@ -231,7 +231,7 @@ export default {
     },
     delBatch() {
       let ids = this.multipleSelection.map(v => v.id)  // [{}, {}, {}] => [1,2,3]
-      this.request.post("/user/del/batch", ids).then(res => {
+      this.request.post("/role/del/batch", ids).then(res => {
         if (res.data) {
           this.$message.success("批量删除成功")
           this.load()

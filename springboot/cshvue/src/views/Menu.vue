@@ -11,7 +11,7 @@
     </div>
 
     <div style="margin: 10px 0">
-      <el-button type="primary" @click="handleAdd">新增 <i class="el-icon-circle-plus-outline"></i></el-button>
+      <el-button  type="primary" @click="handleAddOne">新增 <i class="el-icon-circle-plus-outline"></i></el-button>
       <el-popconfirm
           class="ml-5"
           confirm-button-text='确定'
@@ -26,7 +26,7 @@
 
     </div>
 
-    <el-table :data="tableData" border stripe :header-cell-class-name="'headerBg'"
+    <el-table :data="tableData" border stripe :header-cell-class-name="'headerBg'" row-key="id" default-expand-all
               @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55"></el-table-column>
       <el-table-column prop="id" label="ID" width="120"></el-table-column>
@@ -42,7 +42,7 @@
 
       <el-table-column label="操作"  align="center">
         <template slot-scope="scope">
-          <el-button type="success" @click="selectMenu(scope.row.id)">分配菜单 <i class="el-icon-menu"></i></el-button>
+          <el-button type="success" @click="handleAdd(scope.row.id)" v-if="!scope.row.pid && !scope.row.path">新增子菜单 <i class="el-icon-plus"></i></el-button>
           <el-button type="success" @click="handleEdit(scope.row)">编辑 <i class="el-icon-edit"></i></el-button>
           <el-popconfirm
               class="ml-5"
@@ -122,12 +122,9 @@ export default {
         console.log(res)
         this.tableData = res.data
       })
-      this.request.get("/role").then(res => {
-        this.roles = res.data
-      })
     },
     save() {
-      this.request.post("/user", this.form).then(res => {
+      this.request.post("/menu", this.form).then(res => {
         if (res.code === '200') {
           this.$message.success("保存成功")
           this.dialogFormVisible = false
@@ -136,6 +133,10 @@ export default {
           this.$message.error("保存失败")
         }
       })
+    },
+    handleAddOne() {
+      this.dialogFormVisible = true
+      this.form = {}
     },
     handleAdd(pid) {
       this.dialogFormVisible = true
@@ -154,8 +155,8 @@ export default {
       })
     },
     del(id) {
-      this.request.delete("/user/" + id).then(res => {
-        if (res.data) {
+      this.request.delete("/menu/" + id).then(res => {
+        if (res.code === '200') {
           this.$message.success("删除成功")
           this.load()
         } else {
@@ -163,48 +164,7 @@ export default {
         }
       })
     },
-    saveRoleMenu() {
-      this.request.post("/role/roleMenu/" + this.roleId, this.$refs.tree.getCheckedKeys()).then(res => {
-        if (res.code === '200') {
-          this.$message.success("绑定成功")
-          this.menuDialogVis = false
 
-          // 操作管理员角色后需要重新登录
-          if (this.roleFlag === 'ROLE_ADMIN') {
-            this.$store.commit("logout")
-          }
-
-        } else {
-          this.$message.error(res.msg)
-        }
-      })
-    },
-    selectMenu(role) {
-      this.roleId = role.id
-      this.roleFlag = role.flag
-
-      // 请求菜单数据
-      this.request.get("/menu").then(res => {
-        this.menuData = res.data
-
-        // 把后台返回的菜单数据处理成 id数组
-        this.expends = this.menuData.map(v => v.id)
-      })
-
-      this.request.get("/role/roleMenu/" + this.roleId).then(res => {
-        this.checks = res.data
-
-        this.request.get("/menu/ids").then(r => {
-          const ids = r.data
-          ids.forEach(id => {
-            if (!this.checks.includes(id)) {
-              this.$refs.tree.setChecked(id, false)
-            }
-          })
-        })
-        this.menuDialogVis = true
-      })
-    },
 
     handleSelectionChange(val) {
       console.log(val)
@@ -212,8 +172,8 @@ export default {
     },
     delBatch() {
       let ids = this.multipleSelection.map(v => v.id)  // [{}, {}, {}] => [1,2,3]
-      this.request.post("/user/del/batch", ids).then(res => {
-        if (res.data) {
+      this.request.post("/menu/del/batch", ids).then(res => {
+        if (res.code === '200') {
           this.$message.success("批量删除成功")
           this.load()
         } else {

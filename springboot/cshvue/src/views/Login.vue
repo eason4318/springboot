@@ -1,7 +1,7 @@
 <template>
-  <div class="wrapper">
-    <div style="margin: 200px auto; background-color: #fff; width: 350px; height: 300px; padding: 20px; border-radius: 10px">
-      <div style="margin: 20px 0; text-align: center; font-size: 24px"><b>登 录</b></div>
+  <div class="background" >
+    <div style="margin: 150px auto; width: 350px; height: 300px; padding: 20px; border-radius: 10px">
+      <div style="margin: 20px 0; text-align: center; font-size: 32px; color: cyan"><b>欢 迎 登 录</b></div>
       <el-form :model="user" :rules="rules" ref="userForm">
         <el-form-item prop="username">
           <el-input size="medium" style="margin: 10px 0" prefix-icon="el-icon-user" v-model="user.username"></el-input>
@@ -9,13 +9,14 @@
         <el-form-item prop="password">
           <el-input size="medium" style="margin: 10px 0" prefix-icon="el-icon-lock" show-password v-model="user.password"></el-input>
         </el-form-item>
-        <el-form-item style="margin: 10px 0; text-align: right">
-          <el-button type="primary" size="small"  autocomplete="off" @click="login">登录</el-button>
-          <el-button type="warning" size="small"  autocomplete="off" @click="$router.push('register')">注册</el-button>
+        <el-form-item style="margin: 10px 0px;">
+          <el-button style="width: 140px; margin-right: 20px" type="primary" size="big"  autocomplete="off" @click="login">登录</el-button>
+          <el-button style="width: 140px;" type="warning" size="big"  autocomplete="off" @click="$router.push('register')">注册</el-button>
         </el-form-item>
       </el-form>
     </div>
-  </div>
+ </div>
+
 </template>
 
 <script>
@@ -25,6 +26,10 @@ export default {
   name: "Login",
   data() {
     return {
+      background: {
+        backgroudImage: 'url(' + require('../assets/11.png') + ')',
+
+      },
       user: {},
       rules: {
         username: [
@@ -61,9 +66,31 @@ export default {
 </script>
 
 <style>
-.wrapper {
-  height:100vh;
-  background-image: linear-gradient(to bottom right, #FC466B , #3F5EFB);
-  overflow: hidden;
+.background {
+  background-image: url(../assets/11.png);
+  /* 加了no-repeat反而没有背景图片出现 */
+  background-position: center;
+  height: 100%;
+  width: 100%;
+  background-size: cover;
+  position: fixed;
 }
+/*.wrapper {*/
+/*  height:100vh;*/
+/*  background-image: linear-gradient(to bottom right, #FC466B , #3F5EFB);*/
+/*  overflow: hidden;*/
+/*}*/
+/*.background{*/
+/*  width:100%;*/
+/*  height:100%;  !**宽高100%是为了图片铺满屏幕 *!*/
+/*  z-index:-1;*/
+/*  position: absolute;*/
+/*}*/
+
+/*.wrapper{*/
+/*  z-index:1;*/
+/*  position: absolute;*/
+/*  height: 100vh;*/
+/*  overflow: hidden;*/
+/*}*/
 </style>

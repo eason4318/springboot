@@ -30,7 +30,9 @@
       <el-table-column prop="size" label="文件大小(kb)"></el-table-column>
       <el-table-column label="下载">
         <template slot-scope="scope">
-          <el-button type="primary" @click="download(scope.row.url)">下载</el-button>
+<!--          <el-button type="primary" @click="download(scope.row.url)">下载</el-button>-->
+          <img :src="scope.row.url" alt=""
+               style="width: 30px; border-radius: 50%; position: relative; top: 10px; right: 5px">
         </template>
       </el-table-column>
       <el-table-column label="启用">
